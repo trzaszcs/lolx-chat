@@ -1,0 +1,55 @@
+(ns lolx-chat.store
+  (:require [clj-time.core :refer [now]] ))
+
+
+
+(defonce in-memory-db (atom []))
+
+(defn add
+  [chat-id msg-id type anounce-id author anounce-author msg]
+  (try
+    (swap! 
+     in-memory-db
+     #(conj
+       %
+       {:id chat-id
+        :type type
+        :anounce-id anounce-id
+        :author author
+        :anounce-author anounce-author
+        :created (now)
+        :msgs [{:id msg-id :msg msg :author author :created (now)}]}
+      ))
+    true
+    (catch IllegalStateException e false)))
+
+
+
+(defn append
+  [chat-id msg-id author msg]
+  (try
+    (swap! 
+     in-memory-db
+     (fn [chats]
+       (map
+        (fn [chat]
+          (if (= chat-id (chat :id))
+            (assoc chat :msgs (conj (:msgs chat) {:id msg-id :author author :msg msg :created (now)}))
+            chat
+            )
+          )
+        chats
+        )))
+    true
+    (catch IllegalStateException e false)))
+
+(defn get
+  [chat-id author]
+  (let [chat (first
+              (filter
+               #(= chat-id (:chat-id %))
+               @in-memory-db
+               ))]
+
+    (when (or (= author (:author chat)) (= author (:anounce-author chat)))
+      chat)))
