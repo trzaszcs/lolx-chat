@@ -1,1 +1,1 @@
-web: java $JVM_OPTS -cp target/lolx-auth-standalone.jar clojure.main -m lolx-auth.handler
+web: java $JVM_OPTS -cp target/lolx-chat-standalone.jar clojure.main -m lolx-chat.handler
