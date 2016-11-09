@@ -10,24 +10,13 @@
                  [digest "1.4.4"]
                  [clj-jwt "0.1.1"]
                  [ring/ring-jetty-adapter "1.4.0"]
-                 [clj-http "3.1.0"]
-<<<<<<< HEAD
                  [clj-http "3.3.0"]
                  [environ "1.0.0"]]
-  :plugins [[lein-ring "0.9.7"]
-            [lein-midje "3.1.3"]]
   :ring {:handler lolx-chat.handler/app}
   :uberjar-name "lolx-chat-standalone.jar"
-=======
-                 [camel-snake-kebab "0.4.0"]
-                 [environ "1.1.0"]
-                 [clj-http "3.2.0"]]
   :plugins [[lein-ring "0.9.7"]
             [lein-midje "3.1.3"]
             [lein-environ "1.1.0"]]
-  :ring {:handler lolx-auth.handler/app}
-  :uberjar-name "lolx-auth-standalone.jar"
->>>>>>> 028f004d19e548e5b8e5c219cab158c4082b4ac2
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.0"]
