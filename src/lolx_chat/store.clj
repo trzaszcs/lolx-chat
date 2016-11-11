@@ -15,8 +15,8 @@
        {:id chat-id
         :type type
         :anounce-id anounce-id
-        :author author
-        :anounce-author anounce-author
+        :author-id author
+        :anounce-author-id anounce-author
         :created (now)
         :msgs [{:id msg-id :msg msg :author author :created (now)}]}
       ))
@@ -34,7 +34,7 @@
        (map
         (fn [chat]
           (if (= chat-id (chat :id))
-            (assoc chat :msgs (conj (:msgs chat) {:id msg-id :author author :msg msg :created (now)}))
+            (assoc chat :msgs (conj (:msgs chat) {:id msg-id :author-id author :msg msg :created (now)}))
             chat
             )
           )
@@ -51,5 +51,5 @@
                @in-memory-db
                ))]
 
-    (when (or (= author (:author chat)) (= author (:anounce-author chat)))
+    (when (or (= author (:author-id chat)) (= author (:anounce-author-id chat)))
       chat)))

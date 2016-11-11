@@ -12,13 +12,18 @@
   (str (java.util.UUID/randomUUID)))
 
 
+(defn- enrich-message
+  [msg user-details]
+  (assoc msg
+         :author (get (get user-details (:user-id msg)) "firstName")))
+
 (defn- enrich
   [chat]
-  (let [user-ids (reduce :author (:messages chat))
-        user-details (clients/user-details user-ids)]
+  (let [user-ids [(:author-id chat) (:anounce-author-id chat)]
+        user-details (client/user-details user-ids)]
     (assoc
       chat
-      :messages (map #(assoc % :author (:name (get (:user-id %)))) (:messages chat))
+      :messages (map #(enrich-message % user-details) (:messages chat))
      )
     )
   )
