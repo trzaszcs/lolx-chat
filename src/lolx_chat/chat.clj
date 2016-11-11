@@ -7,10 +7,21 @@
    [ring.util.response :refer :all]
    [digest :as digest]))
 
-
 (defn gen-id!
   []
   (str (java.util.UUID/randomUUID)))
+
+
+(defn- enrich
+  [chat]
+  (let [user-ids (reduce :author (:messages chat))
+        user-details (clients/user-details user-ids)]
+    (assoc
+      chat
+      :messages (map #(assoc % :author (:name (get (:user-id %)))) (:messages chat))
+     )
+    )
+  )
 
 (defn create
   [request]
@@ -33,8 +44,9 @@
   (if-let [chat-id (get-in request (:param :chat-id))]
     (let [token (jwt/extract-jwt (:headers request))]
       (if-let [ok? (jwt/ok? token)]
-        (let [issuer (jwt/issuer token)]
-          {:body (store/get chat-id issuer)}
+        (let [issuer (jwt/issuer token)
+              chat (store/get chat-id issuer)]
+          {:body (enrich chat)}
         )
       {:status 400}
       )

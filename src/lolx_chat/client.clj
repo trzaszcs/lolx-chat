@@ -17,3 +17,12 @@
         (:author-id (:ownerId anounce)))
       )
     ))
+
+(defn user-details
+  [user-ids]
+  (let [response (client/get (str (env :auth-url) "/users")
+                             {:query-params {:ids user-ids}
+                              :throw-exceptions false})]
+    (when (= 200 (:status response))
+      (as-json (:body response))
+    )))
