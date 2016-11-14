@@ -18,7 +18,7 @@
         :author-id author
         :anounce-author-id anounce-author
         :created (now)
-        :msgs [{:id msg-id :msg msg :author author :created (now)}]}
+        :messages [{:id msg-id :msg msg :author author :created (now)}]}
       ))
     true
     (catch IllegalStateException e false)))
@@ -33,8 +33,8 @@
      (fn [chats]
        (map
         (fn [chat]
-          (if (= chat-id (chat :id))
-            (assoc chat :msgs (conj (:msgs chat) {:id msg-id :author-id author :msg msg :created (now)}))
+          (if (= chat-id (:id chat))
+            (assoc chat :messages (conj (:messages chat) {:id msg-id :author-id author :msg msg :created (now)}))
             chat
             )
           )

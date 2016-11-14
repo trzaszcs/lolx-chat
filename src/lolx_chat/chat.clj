@@ -30,27 +30,35 @@
 
 (defn create
   [request]
-  (let [token (jwt/extract-jwt (:headers request))
-        gen-id (gen-id!)]
-    (if-let [ok? (jwt/ok? token)]
-      (let [{type :type msg :msg anounce-id :anounceId} (:body request)
-            issuer (jwt/issuer token)]
-        (if-let [anounce-details (client/anounce-details)]
-          (store/add gen-id (gen-id!) type anounce-id issuer  (:author-id anounce-details) msg)
-          {:body {:id gen-id}}
+  (let [token (jwt/extract-jwt (:headers request))]
+    (if (jwt/ok? token)
+      (do
+        (let [{type :type msg :msg anounce-id :anounceId} (:body request)
+              user-id (jwt/subject token)
+              gen-id (gen-id!)]
+          (let [anounce-details (client/anounce-details anounce-id)]
+            (if anounce-details
+              (do
+                (store/add gen-id (gen-id!) type anounce-id user-id  (:author-id anounce-details) msg)
+                {:body {:id gen-id}}
+                )
+               {:status 400}
+              )
+            )
           )
         )
+      {:status 401}
       )
-    {:status 400}
-    ))
+    )
+  )
 
 (defn get
   [request]
   (if-let [chat-id (get-in request (:param :chat-id))]
     (let [token (jwt/extract-jwt (:headers request))]
       (if-let [ok? (jwt/ok? token)]
-        (let [issuer (jwt/issuer token)
-              chat (store/get chat-id issuer)]
+        (let [user-id (jwt/subject token)
+              chat (store/get chat-id user-id)]
           {:body (enrich chat)}
         )
       {:status 400}
@@ -62,10 +70,10 @@
   (let [chat-id (get-in request (:param :chat-id))
         token (jwt/extract-jwt (:headers request))]
     (when (jwt/ok? token)
-      (let [issuer (jwt/issuer token)]
-        (if-let [chat (store/get chat-id issuer)]
+      (let [user-id (jwt/subject token)]
+        (if-let [chat (store/get chat-id user-id)]
           (let [{msg :msg} (:body request)]
-            (store/append chat-id issuer msg)
+            (store/append chat-id user-id msg)
             {:status 200}
             )
           )

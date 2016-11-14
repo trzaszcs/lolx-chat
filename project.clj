@@ -11,7 +11,8 @@
                  [clj-jwt "0.1.1"]
                  [ring/ring-jetty-adapter "1.4.0"]
                  [clj-http "3.3.0"]
-                 [environ "1.0.0"]]
+                 [environ "1.0.0"]
+                 [ring/ring-devel "0.2.0"]]
   :ring {:handler lolx-chat.handler/app}
   :uberjar-name "lolx-chat-standalone.jar"
   :plugins [[lein-ring "0.9.7"]

@@ -14,12 +14,12 @@
    :sub user-id}
 )
 
-(def rsa-prv-key (private-key (io/resource "rsa/key") "password"))
-(def rsa-pub-key (public-key (io/resource "rsa/key.pub")))
+;(def rsa-prv-key (private-key (io/resource "rsa/key") "password"))
+;(def rsa-pub-key (public-key (io/resource "rsa/key.pub")))
 
-(defn produce
-  [issuer user-id]
-  (-> (build-claim issuer user-id) jwt (sign :RS256 rsa-prv-key) to-str))
+;(defn produce
+;  [issuer user-id]
+;  (-> (build-claim issuer user-id) jwt (sign :RS256 rsa-prv-key) to-str))
 
 (defn get-rsa-pub-key
   [issuer] 
@@ -32,12 +32,11 @@
         issuer (get-in jwt [:claims :iss])]
     (verify jwt (get-rsa-pub-key issuer))))
 
-(defn issuer
+(defn subject
   [jwt-token]
-  (get-in (str->jwt jwt-token) [:claims :iss]))
+  (get-in (str->jwt jwt-token) [:claims :sub]))
 
 (defn extract-jwt
   [headers]
-  (let [authorization-header (get headers "authorization")]
-    (when (not (nil? authorization-header))
-      (clojure.string/replace-first authorization-header #"Bearer " ""))))
+  (if-let [authorization-header (get headers "authorization")]
+      (clojure.string/replace-first authorization-header #"Bearer " "")))

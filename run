@@ -1,8 +1,3 @@
 #!/usr/bin/env bash
-<<<<<<< HEAD
 echo "starting CHAT - 8084"
 exec `lein ring server 8084`
-=======
-echo "starting AUTH - 8082"
-exec `lein ring server 8082`
->>>>>>> 028f004d19e548e5b8e5c219cab158c4082b4ac2

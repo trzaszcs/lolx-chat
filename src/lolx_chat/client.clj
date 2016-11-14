@@ -10,13 +10,10 @@
 
 (defn anounce-details
   [anounce-id]
-  (let [response (client/get (str (env :backend-url) "/anounces" anounce-id)
-                             {:throw-exceptions false})]
-    (when (= 200 (:status response))
-      (let [anounce (as-json (:body response))]
-        (:author-id (:ownerId anounce)))
-      )
-    ))
+  (let [response (client/get (str (env :backend-url) "/anounces/" anounce-id))
+        anounce (as-json (:body response))]
+    {:author-id (get anounce "ownerId")}
+  ))
 
 (defn user-details
   [user-ids]
