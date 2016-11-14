@@ -52,13 +52,15 @@
     )
   )
 
-(defn get
+(defn details
   [request]
-  (if-let [chat-id (get-in request (:param :chat-id))]
+  (println "get" request)
+  (if-let [chat-id (get-in request [:params :chat-id])]
     (let [token (jwt/extract-jwt (:headers request))]
       (if-let [ok? (jwt/ok? token)]
         (let [user-id (jwt/subject token)
               chat (store/get chat-id user-id)]
+          (println chat)
           {:body (enrich chat)}
         )
       {:status 400}
