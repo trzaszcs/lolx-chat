@@ -18,7 +18,7 @@
         :author-id author
         :anounce-author-id anounce-author
         :created (now)
-        :messages [{:id msg-id :msg msg :author author :created (now)}]}
+        :messages [{:id msg-id :msg msg :author-id author :created (now)}]}
       ))
     true
     (catch IllegalStateException e false)))
@@ -47,9 +47,9 @@
   [chat-id author]
   (let [chat (first
               (filter
-               #(= chat-id (:chat-id %))
+               #(= chat-id (:id %))
                @in-memory-db
                ))]
-
-    (when (or (= author (:author-id chat)) (= author (:anounce-author-id chat)))
-      chat)))
+    (if (or (= author (:author-id chat)) (= author (:anounce-author-id chat)))
+      chat
+      nil)))

@@ -5,22 +5,36 @@
    [lolx-chat.jwt :as jwt]
    [lolx-chat.client :as client]
    [ring.util.response :refer :all]
+   [clj-time.format :as format]
    [digest :as digest]))
 
 (defn gen-id!
   []
   (str (java.util.UUID/randomUUID)))
 
+(defn serialize
+  [chat]
+  (let [iso-formatter (format/formatters :date-time)]
+    (let [chat-updated (update chat :created #(format/unparse iso-formatter %))]
+      (update chat-updated :messages (fn [messages]
+                               (map
+                                #(update % :created (fn [created] (format/unparse iso-formatter created)))
+                                messages
+                                )
+                               ))
+      ))
+  )
 
 (defn- enrich-message
   [msg user-details]
   (assoc msg
-         :author (get (get user-details (:user-id msg)) "firstName")))
+         :author (get (get user-details (:author-id msg)) "firstName")))
 
 (defn- enrich
   [chat]
   (let [user-ids [(:author-id chat) (:anounce-author-id chat)]
         user-details (client/user-details user-ids)]
+    (println "-->" user-details)
     (assoc
       chat
       :messages (map #(enrich-message % user-details) (:messages chat))
@@ -54,16 +68,15 @@
 
 (defn details
   [request]
-  (println "get" request)
   (if-let [chat-id (get-in request [:params :chat-id])]
     (let [token (jwt/extract-jwt (:headers request))]
-      (if-let [ok? (jwt/ok? token)]
-        (let [user-id (jwt/subject token)
+      (if (jwt/ok? token)
+        (do
+          (let [user-id (jwt/subject token)
               chat (store/get chat-id user-id)]
-          (println chat)
-          {:body (enrich chat)}
-        )
-      {:status 400}
+          {:body (serialize (enrich chat))}
+          ))
+        {:status 400}
       )
     )))
 
