@@ -82,17 +82,18 @@
 
 (defn append
   [request]
-  (let [chat-id (get-in request (:param :chat-id))
+  (let [chat-id (get-in request [:params :chat-id])
         token (jwt/extract-jwt (:headers request))]
-    (when (jwt/ok? token)
+    (if (jwt/ok? token)
       (let [user-id (jwt/subject token)]
         (if-let [chat (store/get chat-id user-id)]
-          (let [{msg :msg} (:body request)]
-            (store/append chat-id user-id msg)
-            {:status 200}
+          (let [{msg :msg} (:body request)
+                msg-id (gen-id!)]
+            (store/append chat-id msg-id user-id msg)
+            {:body {:id msg-id}}
             )
           )
         )
+       {:status 401}
       )
-    {:status 400}
     ))
