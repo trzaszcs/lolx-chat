@@ -34,10 +34,9 @@
   [chat]
   (let [user-ids [(:author-id chat) (:anounce-author-id chat)]
         user-details (client/user-details user-ids)]
-    (println "-->" user-details)
     (assoc
       chat
-      :messages (map #(enrich-message % user-details) (:messages chat))
+      :messages (reverse (map #(enrich-message % user-details) (:messages chat)))
      )
     )
   )
