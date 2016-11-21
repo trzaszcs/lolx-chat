@@ -79,6 +79,23 @@
       )
     )))
 
+(defn find
+  [request]
+  (if-let [anounce-id (get-in request [:params :anounceId])]
+    (let [token (jwt/extract-jwt (:headers request))]
+      (if (jwt/ok? token)
+        (do
+          (let [user-id (jwt/subject token)
+                chat (store/get-by-anounce-id anounce-id user-id)]
+            (if chat
+              {:body (serialize (enrich chat))}
+              {:status 404}
+              )
+            ))
+        {:status 400}
+        )
+      )))
+
 (defn append
   [request]
   (let [chat-id (get-in request [:params :chat-id])

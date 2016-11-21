@@ -53,3 +53,14 @@
     (if (or (= author (:author-id chat)) (= author (:anounce-author-id chat)))
       chat
       nil)))
+
+(defn get-by-anounce-id
+  [anounce-id author]
+  (let [chat (first
+              (filter
+               #(= anounce-id (:anounce-id %))
+               @in-memory-db
+               ))]
+    (if (or (= author (:author-id chat)) (= author (:anounce-author-id chat)))
+      chat
+      nil)))
