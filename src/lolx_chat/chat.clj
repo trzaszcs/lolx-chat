@@ -41,6 +41,15 @@
     )
   )
 
+(defn- extract-jwt-sub
+  [request]
+  (if-let [token (jwt/extract-jwt (:headers request))]
+    (if (jwt/ok? token)
+      (jwt/subject token)
+      nil
+      )
+    ))
+
 (defn create
   [request]
   (let [token (jwt/extract-jwt (:headers request))]
@@ -95,6 +104,25 @@
         {:status 400}
         )
       )))
+
+(defn find-status
+  [request]
+  (let [user-id (extract-jwt-sub request)]
+    (if user-id
+      (do
+        (let [anounce-id (get-in request [:params :anounceId])
+              chat (store/get-by-anounce-id anounce-id user-id)]
+          (if chat
+            {:body {:id (:id chat)
+                    :unread-messages (count (:messages chat))}}
+            {:status 404}
+            )
+          )
+        )
+      {:status 401}
+      )
+    )
+  )
 
 (defn append
   [request]
