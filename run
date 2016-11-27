@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-echo "starting CHAT - 8084"
-exec `lein ring server 8084`
+echo "starting CHAT"
+exec `lein uberjar`
+exec `java -jar target/lolx-chat-standalone.jar`

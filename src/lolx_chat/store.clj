@@ -80,3 +80,10 @@
       chats
       )))
   )
+
+(defn get-by-user-id
+  [user-id]
+  (filter
+   #(or (= user-id (:author-id %)) (= user-id (:anounce-author-id %))))
+   @in-memory-db
+   )

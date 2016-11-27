@@ -2,7 +2,7 @@
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [compojure.handler :refer [site]]
-            [lolx-chat.chat :refer [create append details find find-status]]
+            [lolx-chat.chat :refer [create append details find find-status user-chats]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -13,6 +13,7 @@
   (GET "/" [] "Lolx Chat")
   (POST "/chat" []  create)
   (GET "/chat/status" []  find-status)
+  (GET "/chat/user" []  user-chats)
   (PUT "/chat/:chat-id" []  append)
   (GET "/chat/status" [] find-status)
   (GET "/chat/:chat-id" [] details)

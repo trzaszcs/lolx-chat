@@ -16,6 +16,15 @@
     )
   )
 
+(defn anounce-bulk-details
+  [anounce-ids]
+  (let [response (client/get (str (env :backend-url) "/anounces/" ) {:query-params {"id" anounce-ids}})
+        anounces-map (as-json (:body response))]
+    anounces-map
+    )
+  )
+
+
 (defn user-details
   [user-ids]
   (let [response (client/get (str (env :auth-url) "/users/bulk")

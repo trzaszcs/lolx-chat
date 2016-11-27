@@ -104,8 +104,10 @@
           (let [user-id (jwt/subject token)
                 chat (store/get-by-anounce-id anounce-id user-id)]
             (if chat
-              (store-mark-read-time (:id chat) user-id)
-              {:body (serialize (enrich chat))}
+              (do
+                (store/mark-read-time (:id chat) user-id)
+                {:body (serialize (enrich chat))}
+                )
               {:status 404}
               )
             ))
@@ -160,3 +162,29 @@
        {:status 401}
       )
     ))
+
+(defn user-chats
+  [request]
+  (let [user-id (extract-jwt-sub request)]
+    (if user-id
+      (do
+        (let [chats (store/get-by-user-id user-id)
+              user-details (client/user-details (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats))
+              anounce-details (client/anounce-bulk-details (map #(:anounce-id %) chats))]
+          {:body (map
+                  (fn [chat]
+                    {:id (:id chat)
+                     :created (:created chat)
+                     :author-id (:author-id chat)
+                     :author-name (get-in user-details [(:author-id chat) "firstName"])
+                     :anounce-author-id (:anounce-author-id chat)
+                     :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
+                     :anounce-title (get-in anounce-details [(:anounce-id chat) "title"])
+                     }
+                    )
+                  chats)}
+        )
+        )
+      {:status 401}
+    )
+  ))
