@@ -14,6 +14,7 @@
   (POST "/chat" []  create)
   (GET "/chat/status" []  find-status)
   (PUT "/chat/:chat-id" []  append)
+  (GET "/chat/status" [] find-status)
   (GET "/chat/:chat-id" [] details)
   (GET "/chat" []  find)
   (route/not-found "Not Found"))

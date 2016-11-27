@@ -6,7 +6,8 @@
    [lolx-chat.client :as client]
    [ring.util.response :refer :all]
    [clj-time.format :as format]
-   [digest :as digest]))
+   [clojure.tools.logging :as log]
+   [clj-time.core :refer [after?]]))
 
 (defn gen-id!
   []
@@ -81,8 +82,14 @@
       (if (jwt/ok? token)
         (do
           (let [user-id (jwt/subject token)
-              chat (store/get chat-id user-id)]
-          {:body (serialize (enrich chat))}
+                chat (store/get chat-id user-id)]
+            (if chat
+              (do
+                (store/mark-read-time (:id chat) user-id)
+                {:body (serialize (enrich chat))}
+                )
+              {:status 404}
+              )
           ))
         {:status 400}
       )
@@ -97,6 +104,7 @@
           (let [user-id (jwt/subject token)
                 chat (store/get-by-anounce-id anounce-id user-id)]
             (if chat
+              (store-mark-read-time (:id chat) user-id)
               {:body (serialize (enrich chat))}
               {:status 404}
               )
@@ -104,6 +112,17 @@
         {:status 400}
         )
       )))
+
+(defn count-unread-messages
+  [chat user-id]
+  (let [read-time (get-in chat [:read user-id])
+        opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
+    (if read-time
+      (count (filter #((after? read-time (:created %)) opponent-messages)))
+      (count opponent-messages)
+      )
+    )
+  )
 
 (defn find-status
   [request]
@@ -114,7 +133,7 @@
               chat (store/get-by-anounce-id anounce-id user-id)]
           (if chat
             {:body {:id (:id chat)
-                    :unread-messages (count (:messages chat))}}
+                    :unread-messages (count-unread-messages chat user-id)}}
             {:status 404}
             )
           )

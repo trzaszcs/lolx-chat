@@ -64,3 +64,19 @@
     (if (or (= author (:author-id chat)) (= author (:anounce-author-id chat)))
       chat
       nil)))
+
+(defn mark-read-time
+  [chat-id user-id]
+  (swap! 
+   in-memory-db
+   (fn [chats]
+     (map
+      (fn [chat]
+        (if (= chat-id (:id chat))
+          (assoc-in chat [:read user-id] (now))
+          chat
+          )
+        )
+      chats
+      )))
+  )
