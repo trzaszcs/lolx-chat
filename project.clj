@@ -13,9 +13,9 @@
                  [clj-http "3.3.0"]
                  [environ "1.0.0"]
                  [ring/ring-devel "0.2.0"]
+                 [camel-snake-kebab "0.4.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [ch.qos.logback/logback-classic "1.1.7"]
-                 [midje "1.8.3"]]
+                 [ch.qos.logback/logback-classic "1.1.7"]]
   :ring {:handler lolx-chat.handler/app}
   :uberjar-name "lolx-chat-standalone.jar"
   :plugins [[lein-ring "0.9.7"]

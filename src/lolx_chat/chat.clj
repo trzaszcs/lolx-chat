@@ -168,21 +168,25 @@
   (let [user-id (extract-jwt-sub request)]
     (if user-id
       (do
-        (let [chats (store/get-by-user-id user-id)
-              user-details (client/user-details (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats))
-              anounce-details (client/anounce-bulk-details (map #(:anounce-id %) chats))]
-          {:body (map
-                  (fn [chat]
-                    {:id (:id chat)
-                     :created (:created chat)
-                     :author-id (:author-id chat)
-                     :author-name (get-in user-details [(:author-id chat) "firstName"])
-                     :anounce-author-id (:anounce-author-id chat)
-                     :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
-                     :anounce-title (get-in anounce-details [(:anounce-id chat) "title"])
-                     }
-                    )
-                  chats)}
+        (let [chats (store/get-by-user-id user-id)]
+          (if (not (empty? chats))
+            (let [user-details (client/user-details (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats))
+                  anounce-details (client/anounce-bulk-details (map #(:anounce-id %) chats))]
+              {:body (map
+                      (fn [chat]
+                        {:id (:id chat)
+                         :created (:created chat)
+                         :author-id (:author-id chat)
+                         :author-name (get-in user-details [(:author-id chat) "firstName"])
+                         :anounce-author-id (:anounce-author-id chat)
+                         :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
+                         :anounce-title (get-in anounce-details [(:anounce-id chat) "title"])
+                         }
+                        )
+                      chats)}
+              )
+             {:body []}
+            )
         )
         )
       {:status 401}

@@ -7,7 +7,9 @@
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.adapter.jetty :as jetty]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [camel-snake-kebab.core :refer :all]
+            [camel-snake-kebab.extras :refer [transform-keys]]))
 
 (defroutes app-routes
   (GET "/" [] "Lolx Chat")
@@ -20,10 +22,28 @@
   (GET "/chat" []  find)
   (route/not-found "Not Found"))
 
+(defn- camel-case
+  [map]
+  (transform-keys
+   ->camelCaseString
+   map))
+
+(defn camel-case-response-converter
+  [handler]
+  (fn [request]
+    (let [response (handler request)
+          body (:body response)]
+      (if (and body (coll? body))
+        (assoc response :body (camel-case body))
+        response
+        )
+      )))
+
 (def app
   (-> app-routes
-      (wrap-json-response)
       (wrap-json-body {:keywords? true :bigdecimals? true})
+      (camel-case-response-converter)
+      (wrap-json-response)
       (wrap-defaults (assoc-in site-defaults [:security] {:anti-forgery false}))))
 
 (def server (atom nil))
