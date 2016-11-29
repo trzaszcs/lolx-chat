@@ -120,7 +120,7 @@
   (let [read-time (get-in chat [:read user-id])
         opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
     (if read-time
-      (count (filter #((after? read-time (:created %)) opponent-messages)))
+      (count (filter #(after? read-time (:created %)) opponent-messages))
       (count opponent-messages)
       )
     )
@@ -172,6 +172,7 @@
           (if (not (empty? chats))
             (let [user-details (client/user-details (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats))
                   anounce-details (client/anounce-bulk-details (map #(:anounce-id %) chats))]
+              (log/info "-->" anounce-details)
               {:body (map
                       (fn [chat]
                         {:id (:id chat)
@@ -180,7 +181,7 @@
                          :author-name (get-in user-details [(:author-id chat) "firstName"])
                          :anounce-author-id (:anounce-author-id chat)
                          :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
-                         :anounce-title (get-in anounce-details [(:anounce-id chat) "title"])
+                         :anounce-title (get-in anounce-details [(:anounce-id chat) :title])
                          }
                         )
                       chats)}
