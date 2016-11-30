@@ -13,19 +13,6 @@
   []
   (str (java.util.UUID/randomUUID)))
 
-(defn serialize
-  [chat]
-  (let [iso-formatter (format/formatters :date-time)]
-    (let [chat-updated (update chat :created #(format/unparse iso-formatter %))]
-      (update chat-updated :messages (fn [messages]
-                               (map
-                                #(update % :created (fn [created] (format/unparse iso-formatter created)))
-                                messages
-                                )
-                               ))
-      ))
-  )
-
 (defn- enrich-message
   [msg user-details]
   (assoc msg
@@ -86,7 +73,7 @@
             (if chat
               (do
                 (store/mark-read-time (:id chat) user-id)
-                {:body (serialize (enrich chat))}
+                {:body (enrich chat)}
                 )
               {:status 404}
               )
@@ -106,7 +93,7 @@
             (if chat
               (do
                 (store/mark-read-time (:id chat) user-id)
-                {:body (serialize (enrich chat))}
+                {:body (enrich chat)}
                 )
               {:status 404}
               )
@@ -172,7 +159,6 @@
           (if (not (empty? chats))
             (let [user-details (client/user-details (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats))
                   anounce-details (client/anounce-bulk-details (map #(:anounce-id %) chats))]
-              (log/info "-->" anounce-details)
               {:body (map
                       (fn [chat]
                         {:id (:id chat)
