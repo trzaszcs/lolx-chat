@@ -18,9 +18,15 @@
 
 (defn anounce-bulk-details
   [anounce-ids]
-  (let [response (client/get (str (env :backend-url) "/anounces/" ) {:query-params {"id" anounce-ids}})
+  (let [response (client/get (str (env :backend-url) "/anounces/bulk" ) {:query-params {"id" anounce-ids}})
         anounces-map (as-json (:body response))]
-    anounces-map
+    (reduce
+     (fn [set [key value]]
+       (assoc set (str key) value)
+       )
+     {}
+     anounces-map
+     )
     )
   )
 
