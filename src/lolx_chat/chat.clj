@@ -157,21 +157,26 @@
       (do
         (let [chats (store/get-by-user-id user-id)]
           (if (not (empty? chats))
-            (let [user-details (client/user-details (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats))
-                  anounce-details (client/anounce-bulk-details (map #(:anounce-id %) chats))]
-              (log/info "--->" anounce-details)
+            (let [user-details (client/user-details (distinct (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats)))
+                  anounce-details (client/anounce-bulk-details (distinct (map #(:anounce-id %) chats)))
+                  grouped-chats (group-by :anounce-id chats)]
               {:body (map
-                      (fn [chat]
-                        {:id (:id chat)
-                         :created (:created chat)
-                         :author-id (:author-id chat)
-                         :author-name (get-in user-details [(:author-id chat) "firstName"])
-                         :anounce-author-id (:anounce-author-id chat)
-                         :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
-                         :anounce-title (get-in anounce-details [(:anounce-id chat) "title"])
-                         }
-                        )
-                      chats)}
+                      (fn [[anounce-id chats]]
+                        (let [chat (first chats)]
+                          {:anounce-id anounce-id
+                           :anounce-title (get-in anounce-details [anounce-id "title"])
+                           :anounce-author-id (:anounce-author-id chat)
+                           :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
+                           :chats (map
+                                   (fn [chat]
+                                     {:id (:id chat)
+                                      :created (:created chat)
+                                      :author-id (:author-id chat)
+                                      :author-name (get-in user-details [(:author-id chat) "firstName"])}
+                                     )
+                                   chats)
+                           }))
+                      grouped-chats)}
               )
              {:body []}
             )

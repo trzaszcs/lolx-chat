@@ -38,17 +38,22 @@
             chat-author-name "NAME"
             anounce-author-id "2"
             anounce-author-name "NAME2"
-            chat {:id "chatId" :author-id chat-author-id :anounce-author-id anounce-author-id :anounce-id "222" :created (now)}
+            anounce-id "ann-id"
+            chat {:id "chatId" :author-id chat-author-id :anounce-author-id anounce-author-id :anounce-id anounce-id :created (now)}
             anounce-title "some title"]
         (chat/user-chats {:headers {"authorization" (str "Bearer " token)}})
         => {:body
-            [{:id (:id chat)
+            [{
+              :anounce-id anounce-id
               :anounce-title anounce-title
-              :author-id chat-author-id
               :anounce-author-id anounce-author-id
-              :author-name chat-author-name
               :anounce-author-name anounce-author-name
-              :created (:created chat)}]}
+              :chats [{:id (:id chat)
+                       :author-id chat-author-id
+                       :author-name chat-author-name
+                       :created (:created chat)
+                       }]
+              }]}
         (provided
          (jwt/ok? token) => true
          (jwt/subject token) => user-id
