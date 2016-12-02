@@ -2,6 +2,7 @@
   (:require 
    [clojure.data.json :as json]
    [clj-http.client :as client]
+   [clojure.tools.logging :as log]
    [environ.core :refer [env]]))
 
 (defn- as-json

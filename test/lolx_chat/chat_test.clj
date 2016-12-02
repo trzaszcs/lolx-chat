@@ -39,7 +39,8 @@
             anounce-author-id "2"
             anounce-author-name "NAME2"
             anounce-id "ann-id"
-            chat {:id "chatId" :author-id chat-author-id :anounce-author-id anounce-author-id :anounce-id anounce-id :created (now)}
+            first-message "msg"
+            chat {:id "chatId" :author-id chat-author-id :anounce-author-id anounce-author-id :anounce-id anounce-id :created (now) :messages [{:msg first-message}]}
             anounce-title "some title"]
         (chat/user-chats {:headers {"authorization" (str "Bearer " token)}})
         => {:body
@@ -51,6 +52,7 @@
               :chats [{:id (:id chat)
                        :author-id chat-author-id
                        :author-name chat-author-name
+                       :first-message first-message
                        :created (:created chat)
                        }]
               }]}

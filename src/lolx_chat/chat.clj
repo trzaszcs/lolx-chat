@@ -169,10 +169,13 @@
                            :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
                            :chats (map
                                    (fn [chat]
-                                     {:id (:id chat)
-                                      :created (:created chat)
-                                      :author-id (:author-id chat)
-                                      :author-name (get-in user-details [(:author-id chat) "firstName"])}
+                                     (let [first-message (get-in chat [:messages 0 :msg])]
+                                       {:id (:id chat)
+                                        :created (:created chat)
+                                        :author-id (:author-id chat)
+                                        :first-message (subs first-message 0 (min (count first-message) 20))
+                                        :author-name (get-in user-details [(:author-id chat) "firstName"])}
+                                       )
                                      )
                                    chats)
                            }))
