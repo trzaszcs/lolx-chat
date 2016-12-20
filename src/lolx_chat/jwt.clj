@@ -19,12 +19,13 @@
 
 (defn build-auth-token
   [user-id]
-  (->
-   (build-claim "chat" user-id)
-   jwt
-   (sign :RS256 rsa-prv-key)
-   to-str
-   (str "Bearer ")))
+  (str
+   "Bearer "
+   (->
+    (build-claim "chat" user-id)
+    jwt
+    (sign :RS256 rsa-prv-key)
+    to-str)))
 
 (defn get-rsa-pub-key
   [issuer] 

@@ -22,7 +22,7 @@
 (defn- enrich
   [chat]
   (let [messages (:messages chat)
-        user-ids (distinct (reduce :author-id messages))
+        user-ids (distinct (map :author-id messages))
         user-details (client/user-details user-ids)]
     (assoc
       chat
@@ -31,7 +31,7 @@
     )
   )
 
-(defonce iso-formatter (format/formatters :date-time))
+(defonce iso-formatter (format/formatter "yyyy-MM-dd'T'HH:mm:ssZ"))
 
 (defn build-messages-for-chat
   [chat]
@@ -51,7 +51,7 @@
             build-status-change-msg (fn [msg request-order] {:msg msg :created (format/parse iso-formatter (get request-order "statusUpdateDate"))})]
         (map
          #(assoc % :type "userAction" :author-id (get "authorId" request-order))
-         (case (:status request-order)
+         (case (get request-order "status")
            "WAITING"  [(build-init-msg request-order)]
            "ACCEPTED" [(build-init-msg request-order) (build-status-change-msg "Właściciel ogłoszenia zaapceptował zamówienie" request-order)]
            "REJECTED" [(build-init-msg request-order) (build-status-change-msg "Właściciel ogłoszenia odrzucił zamówienie" request-order)]
