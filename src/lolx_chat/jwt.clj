@@ -14,12 +14,17 @@
    :sub user-id}
 )
 
-;(def rsa-prv-key (private-key (io/resource "rsa/key") "password"))
+(defonce rsa-prv-key (private-key (io/resource "rsa/key") "password"))
 ;(def rsa-pub-key (public-key (io/resource "rsa/key.pub")))
 
-;(defn produce
-;  [issuer user-id]
-;  (-> (build-claim issuer user-id) jwt (sign :RS256 rsa-prv-key) to-str))
+(defn build-auth-token
+  [user-id]
+  (->
+   (build-claim "chat" user-id)
+   jwt
+   (sign :RS256 rsa-prv-key)
+   to-str
+   (str "Bearer ")))
 
 (defn get-rsa-pub-key
   [issuer] 
