@@ -3,72 +3,15 @@
    [compojure.core :refer :all]
    [lolx-chat.store :as store]
    [lolx-chat.jwt :as jwt]
+   [lolx-chat.details :refer [find-and-decorate-by-chat-id! find-and-decorate-by-anounce-id!]]
    [lolx-chat.client :as client]
    [ring.util.response :refer :all]
-   [clj-time.format :as format]
    [clojure.tools.logging :as log]
-   [clj-time.core :refer [after?]]
-   [clj-time.format :as format]))
+   [clj-time.core :refer [after?]]))
 
 (defn gen-id!
   []
   (str (java.util.UUID/randomUUID)))
-
-(defn- enrich-message
-  [msg user-details]
-  (assoc msg
-         :author (get (get user-details (:author-id msg)) "firstName")))
-
-(defn- enrich
-  [chat]
-  (let [messages (:messages chat)
-        user-ids (distinct (map :author-id messages))
-        user-details (client/user-details user-ids)]
-    (assoc
-      chat
-      :messages (reverse (map #(enrich-message % user-details) messages))
-     )
-    )
-  )
-
-(defonce iso-formatter (format/formatter "yyyy-MM-dd'T'HH:mm:ssZ"))
-
-(defn build-messages-for-chat
-  [chat]
-  (map
-   (fn [message]
-     (assoc message :type "user")
-     )
-   (:messages chat)
-   )
-)
-
-(defn build-messages-for-request-order
-  [request-order]
-  (if request-order
-    (do
-      (let [build-init-msg (fn [request-order] {:msg "Wysłano zamówienie" :created (format/parse iso-formatter (get request-order "creationDate")) })
-            build-status-change-msg (fn [msg request-order] {:msg msg :created (format/parse iso-formatter (get request-order "statusUpdateDate"))})]
-        (map
-         #(assoc % :type "userAction" :author-id (get "authorId" request-order))
-         (case (get request-order "status")
-           "WAITING"  [(build-init-msg request-order)]
-           "ACCEPTED" [(build-init-msg request-order) (build-status-change-msg "Właściciel ogłoszenia zaapceptował zamówienie" request-order)]
-           "REJECTED" [(build-init-msg request-order) (build-status-change-msg "Właściciel ogłoszenia odrzucił zamówienie" request-order)]
-           )
-         )
-        )
-      )
-     []
-    )
-  )
-
-(defn merge-messages
-  [chat-messages request-order-messages]
-  (sort-by
-   :created
-   (concat chat-messages request-order-messages))
-  )
 
 (defn- extract-jwt-sub
   [request]
@@ -109,13 +52,8 @@
     (let [token (jwt/extract-jwt (:headers request))]
       (if (jwt/ok? token)
         (do
-          (let [user-id (jwt/subject token)
-                chat (store/get chat-id user-id)
-                request-order (client/request-order (:anounce-id chat) user-id)]
-            (when chat
-              (store/mark-read-time (:id chat) user-id)
-              )
-            {:body (enrich {:messages (merge-messages (build-messages-for-chat chat) (build-messages-for-request-order request-order))})}
+          (let [user-id (jwt/subject token)]
+            {:body (find-and-decorate-by-chat-id! chat-id user-id)}
           ))
         {:status 400}
       )
@@ -127,13 +65,8 @@
     (let [token (jwt/extract-jwt (:headers request))]
       (if (jwt/ok? token)
         (do
-          (let [user-id (jwt/subject token)
-                chat (store/get-by-anounce-id anounce-id user-id)
-                request-order (client/request-order anounce-id user-id)]
-            (when chat
-              (store/mark-read-time (:id chat) user-id)
-              )
-            {:body (enrich {:messages (merge-messages (build-messages-for-chat chat) (build-messages-for-request-order request-order))})}
+          (let [user-id (jwt/subject token)]
+            {:body (find-and-decorate-by-anounce-id! anounce-id user-id)}
             ))
         {:status 400}
         )
