@@ -13,7 +13,7 @@
 (defn- enrich-message
   [msg user-details]
   (assoc msg
-         :author (get (get user-details (:author-id msg)) "firstName")))
+         :author (get (get user-details (:author-id msg)) "nick")))
 
 (defn- enrich
   [chat]
@@ -24,6 +24,7 @@
            :messages
            (sort-by
             :created
+            after?
             (map #(enrich-message % user-details) messages))
      )
     )
@@ -34,14 +35,16 @@
 (defn build-messages-for-request-order
   [request-order]
   (if request-order
-    (let [build-msg (fn
-                      [msg-type date]
-                      {:type msg-type :id (get request-order "id") :author-id (get request-order "authorId") :created (format/parse iso-formatter date)})
-         creation-ro-msg (build-msg "requestOrderCreation" (get request-order "creationDate"))]
+    (let [anounce-author-id (get request-order "anounceAuthorId")
+          author-id (get request-order "authorId")
+          build-msg (fn
+                      [msg-type author-id date]
+                      {:type msg-type :id (get request-order "id") :author-id author-id :created (format/parse iso-formatter date)})
+          creation-ro-msg (build-msg "requestOrderCreation" author-id (get request-order "creationDate"))]
          (case (get request-order "status")
            "WAITING"  [creation-ro-msg]
-           "ACCEPTED" [creation-ro-msg (build-msg "requestOrderAcceptance" (get request-order "statusUpdateDate"))]
-           "REJECTED" [creation-ro-msg (build-msg "requestOrderCancelation" (get request-order "statusUpdateDate"))]
+           "ACCEPTED" [creation-ro-msg (build-msg "requestOrderAcceptance" anounce-author-id (get request-order "statusUpdateDate"))]
+           "REJECTED" [creation-ro-msg (build-msg "requestOrderCancelation" anounce-author-id (get request-order "statusUpdateDate"))]
            )
     )
    []
@@ -70,6 +73,7 @@
   (if chat
     (assoc anounce-user-history
               :id (:id chat)
+              :author-id (:author-id chat)
               :anounce-id (:anounce-id chat)
               :messages (concat (:messages anounce-user-history)(build-messages-for-chat chat)))
     anounce-user-history
