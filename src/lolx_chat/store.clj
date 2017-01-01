@@ -6,7 +6,7 @@
 (defonce in-memory-db (atom []))
 
 (defn add
-  [chat-id msg-id type anounce-id author anounce-author msg]
+  [chat-id msg-id type anounce-id request-order-id author anounce-author msg]
   (try
     (swap! 
      in-memory-db
@@ -15,6 +15,7 @@
        {:id chat-id
         :type type
         :anounce-id anounce-id
+        :request-order-id request-order-id
         :author-id author
         :anounce-author-id anounce-author
         :created (now)
@@ -22,7 +23,6 @@
       ))
     true
     (catch IllegalStateException e false)))
-
 
 
 (defn append

@@ -27,16 +27,16 @@
   (let [token (jwt/extract-jwt (:headers request))]
     (if (jwt/ok? token)
       (do
-        (let [{type :type msg :msg anounce-id :anounceId} (:body request)
+        (let [{type :type msg :msg anounce-id :anounceId request-order-id :requestOrderId} (:body request)
               user-id (jwt/subject token)
               gen-id (gen-id!)]
-          (let [anounce-details (client/anounce-details anounce-id)]
-            (if anounce-details
+          (if anounce-id
+            (if-let [anounce-details (client/anounce-details anounce-id)]
               (do
-                (store/add gen-id (gen-id!) type anounce-id user-id  (:author-id anounce-details) msg)
+                (store/add gen-id (gen-id!) type anounce-id request-order-id user-id  (:author-id anounce-details) msg)
                 {:body {:id gen-id}}
                 )
-               {:status 400}
+              {:status 400}
               )
             )
           )
