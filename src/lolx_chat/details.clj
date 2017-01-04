@@ -30,27 +30,6 @@
     )
   )
 
-(defonce iso-formatter (format/formatter "yyyy-MM-dd'T'HH:mm:ssZ"))
-
-(defn build-messages-for-request-order
-  [request-order]
-  (if request-order
-    (let [anounce-author-id (get request-order "anounceAuthorId")
-          author-id (get request-order "authorId")
-          build-msg (fn
-                      [msg-type author-id date]
-                      {:type msg-type :id (get request-order "id") :author-id author-id :created (format/parse iso-formatter date)})
-          creation-ro-msg (build-msg "requestOrderCreation" author-id (get request-order "creationDate"))]
-         (case (get request-order "status")
-           "WAITING"  [creation-ro-msg]
-           "ACCEPTED" [creation-ro-msg (build-msg "requestOrderAcceptance" anounce-author-id (get request-order "statusUpdateDate"))]
-           "REJECTED" [creation-ro-msg (build-msg "requestOrderCancelation" anounce-author-id (get request-order "statusUpdateDate"))]
-           )
-    )
-   []
-   )
-)
-
 (defn build-messages-for-chat
   [chat]
   (map
@@ -60,13 +39,6 @@
    (:messages chat)
    )
   )
-
-(defn decorate-with-request-order
-  [anounce-user-history request-order]
-  (if request-order
-    (assoc anounce-user-history :messages (concat (:messages anounce-user-history)(build-messages-for-request-order request-order)))
-    anounce-user-history
-    ))
 
 (defn decorate-with-chat
   [anounce-user-history chat]
@@ -81,30 +53,26 @@
 
 (defn find-and-decorate-by-chat-id!
   [chat-id user-id]
-  (let [chat (store/get chat-id user-id)
-        request-order (client/request-order (:anounce-id chat) user-id)]
+  (let [chat (store/get chat-id user-id)]
     (when chat
       (store/mark-read-time (:id chat) user-id)
       )
     (enrich
      (->
       {:messages []}
-      (decorate-with-request-order request-order)
       (decorate-with-chat chat)
       ))
    ))
 
 (defn find-and-decorate-by-anounce-id!
   [anounce-id user-id]
-  (let [chat (store/get-by-anounce-id anounce-id user-id)
-        request-order (client/request-order anounce-id user-id)]
+  (let [chat (store/get-by-anounce-id anounce-id user-id)]
     (when chat
       (store/mark-read-time (:id chat) user-id)
     )
     (enrich
      (->
       {:anounce-id anounce-id :messages []}
-      (decorate-with-request-order request-order)
       (decorate-with-chat chat)
       ))
    ))
