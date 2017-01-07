@@ -52,8 +52,12 @@
     (let [token (jwt/extract-jwt (:headers request))]
       (if (jwt/ok? token)
         (do
-          (let [user-id (jwt/subject token)]
-            {:body (find-and-decorate-by-chat-id! chat-id user-id)}
+          (let [user-id (jwt/subject token)
+                enriched-chat (find-and-decorate-by-chat-id! chat-id user-id)]
+            (if enriched-chat
+              {:body enriched-chat}
+              {:status 404}
+            )
           ))
         {:status 400}
       )
@@ -65,8 +69,12 @@
     (let [token (jwt/extract-jwt (:headers request))]
       (if (jwt/ok? token)
         (do
-          (let [user-id (jwt/subject token)]
-            {:body (find-and-decorate-by-anounce-id! anounce-id user-id)}
+          (let [user-id (jwt/subject token)
+                enriched-chat (find-and-decorate-by-anounce-id! anounce-id user-id)]
+            (if enriched-chat
+              {:body enriched-chat}
+              {:status 404}
+              )
             ))
         {:status 400}
         )

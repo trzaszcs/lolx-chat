@@ -67,7 +67,7 @@
 
 (defn mark-read-time
   [chat-id user-id]
-  (swap! 
+  (swap!
    in-memory-db
    (fn [chats]
      (map
