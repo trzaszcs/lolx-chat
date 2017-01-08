@@ -10,25 +10,27 @@
 
 (fact "should  '404' when no chat for anounceId"
       (let [user-id "234"
+            opponent "3445"
             token "JWT"
             anounce-id "ANID"]
-        (chat/find-status {:params {:anounceId anounce-id} :headers {"authorization" (str "Bearer " token)}}) => {:status 404} 
+        (chat/find-status {:params {:anounceId anounce-id :opponent opponent} :headers {"authorization" (str "Bearer " token)}}) => {:status 404} 
         (provided
          (jwt/ok? token) => true
          (jwt/subject token) => user-id
-         (store/get-by-anounce-id anounce-id user-id) => nil)))
+         (store/get-by-anounce-id anounce-id [user-id opponent]) => nil)))
 
 (fact "should return status by anounceId"
       (let [user-id "234"
+            opponent "3445"
             token "JWT"
             anounce-id "ANID"
             chat-id "chatId"]
-        (chat/find-status {:params {:anounceId anounce-id} :headers {"authorization" (str "Bearer " token)}})
-          => {:body {:id chat-id :unread-messages 3}} 
+        (chat/find-status {:params {:anounceId anounce-id :opponent opponent} :headers {"authorization" (str "Bearer " token)}})
+          => {:body {:id chat-id :unread-messages 3}}
         (provided
          (jwt/ok? token) => true
          (jwt/subject token) => user-id
-         (store/get-by-anounce-id anounce-id user-id) => {:id chat-id :messages [1 2 3]})))
+         (store/get-by-anounce-id anounce-id [user-id opponent]) => {:id chat-id :messages [1 2 3]})))
 
 
 (fact "should return user anounces"
@@ -40,7 +42,7 @@
             anounce-author-name "NAME2"
             anounce-id "ann-id"
             first-message "msg"
-            chat {:id "chatId" :author-id chat-author-id :anounce-author-id anounce-author-id :anounce-id anounce-id :created (now) :messages [{:msg first-message}]}
+            chat {:id "chatId" :author-id chat-author-id :recipient anounce-author-id :anounce-author-id anounce-author-id :anounce-id anounce-id :created (now) :messages [{:msg first-message}]}
             anounce-title "some title"]
         (chat/user-chats {:headers {"authorization" (str "Bearer " token)}})
         => {:body

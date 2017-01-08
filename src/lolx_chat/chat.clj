@@ -27,13 +27,13 @@
   (let [token (jwt/extract-jwt (:headers request))]
     (if (jwt/ok? token)
       (do
-        (let [{type :type msg :msg anounce-id :anounceId request-order-id :requestOrderId} (:body request)
+        (let [{type :type msg :msg anounce-id :anounceId opponent :opponent} (:body request)
               user-id (jwt/subject token)
               gen-id (gen-id!)]
           (if anounce-id
             (if-let [anounce-details (client/anounce-details anounce-id)]
               (do
-                (store/add gen-id (gen-id!) type anounce-id request-order-id user-id  (:author-id anounce-details) msg)
+                (store/add gen-id (gen-id!) type anounce-id opponent user-id  (:author-id anounce-details) msg)
                 {:body {:id gen-id}}
                 )
               {:status 400}
@@ -65,12 +65,14 @@
 
 (defn find
   [request]
-  (if-let [anounce-id (get-in request [:params :anounceId])]
+  (let [params (:params request)
+        anounce-id (:anounceId params)
+        opponent (:opponent params)]
     (let [token (jwt/extract-jwt (:headers request))]
       (if (jwt/ok? token)
         (do
           (let [user-id (jwt/subject token)
-                enriched-chat (find-and-decorate-by-anounce-id! anounce-id user-id)]
+                enriched-chat (find-and-decorate-by-anounce-id! anounce-id user-id opponent)]
             (if enriched-chat
               {:body enriched-chat}
               {:status 404}
@@ -96,8 +98,10 @@
   (let [user-id (extract-jwt-sub request)]
     (if user-id
       (do
-        (let [anounce-id (get-in request [:params :anounceId])
-              chat (store/get-by-anounce-id anounce-id user-id)]
+        (let [params (:params request)
+              anounce-id (:anounceId params)
+              opponent (:opponent params)
+              chat (store/get-by-anounce-id anounce-id [user-id opponent])]
           (if chat
             {:body {:id (:id chat)
                     :unread-messages (count-unread-messages chat user-id)}}

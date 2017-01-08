@@ -47,8 +47,8 @@
    ))
 
 (defn find-and-decorate-by-anounce-id!
-  [anounce-id user-id]
-  (when-let [chat (store/get-by-anounce-id anounce-id user-id)]
+  [anounce-id user-id opponent]
+  (when-let [chat (store/get-by-anounce-id anounce-id [user-id opponent])]
     (store/mark-read-time (:id chat) user-id)
     (enrich chat user-id)
   ))
