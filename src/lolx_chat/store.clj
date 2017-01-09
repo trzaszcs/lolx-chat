@@ -56,14 +56,14 @@
 
 (defn get-by-anounce-id
   [anounce-id authors]
-  (let [chat (first
-              (filter
-               #(= anounce-id (:anounce-id %))
-               @in-memory-db
-               ))]
-    (if (and  (contains? authors (:author-id chat)) (contains? authors (:recipient chat)))
-      chat
-      nil)))
+  (let [in? (fn [col val] (some #(= val %) col))]
+    (first
+     (filter
+      #(and (= anounce-id (:anounce-id %)) (in? authors (:author-id %)) (in? authors (:recipient %)))
+      @in-memory-db
+      ))
+    )
+  )
 
 (defn mark-read-time
   [chat-id user-id]
