@@ -134,10 +134,13 @@
 
 (defn user-chats
   [request]
-  (let [user-id (extract-jwt-sub request)]
+  (let [user-id (extract-jwt-sub request)
+        params (:params request)
+        page (or (:page params) 0)
+        items-per-page (or (:itemsPerPage params) 20)]
     (if user-id
       (do
-        (let [chats (store/get-by-user-id user-id)]
+        (let [chats (drop (* page items-per-page) (take items-per-page (store/get-by-user-id user-id)))]
           (if (not (empty? chats))
             (let [user-details (client/user-details (distinct (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats)))
                   anounce-details (client/anounce-bulk-details (distinct (map #(:anounce-id %) chats)))
