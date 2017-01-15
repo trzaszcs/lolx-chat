@@ -136,40 +136,38 @@
   [request]
   (let [user-id (extract-jwt-sub request)
         params (:params request)
-        page (or (:page params) 0)
-        items-per-page (or (:itemsPerPage params) 20)]
+        page (Integer/parseInt (or (:page params) "0"))
+        items-per-page (Integer/parseInt (or (:itemsPerPage params) "20"))]
     (if user-id
       (do
-        (let [chats (drop (* page items-per-page) (take items-per-page (store/get-by-user-id user-id)))]
-          (if (not (empty? chats))
+        (let [user-chats (store/get-by-user-id user-id)
+              total-count (count user-chats)
+              chats (drop (* page items-per-page) (take items-per-page user-chats))]
             (let [user-details (client/user-details (distinct (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats)))
                   anounce-details (client/anounce-bulk-details (distinct (map #(:anounce-id %) chats)))
                   grouped-chats (group-by :anounce-id chats)]
-              {:body (map
-                      (fn [[anounce-id chats]]
-                        (let [chat (first chats)]
-                          {:anounce-id anounce-id
-                           :anounce-title (get-in anounce-details [anounce-id "title"])
-                           :anounce-author-id (:anounce-author-id chat)
-                           :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
-                           :chats (map
-                                   (fn [chat]
-                                     (let [first-message (get-in chat [:messages 0 :msg])]
-                                       {:id (:id chat)
-                                        :created (:created chat)
-                                        :author-id (:author-id chat)
-                                        :first-message (subs first-message 0 (min (count first-message) 20))
-                                        :author-name (get-in user-details [(:author-id chat) "firstName"])}
-                                       )
-                                     )
-                                   chats)
-                           }))
-                      grouped-chats)}
+              {:body
+               {
+                :chats (map
+                        (fn [chat]
+                          (let [anounce-id (:anounce-id chat)
+                                first-message (get-in chat [:messages 0 :msg])]
+                            {:anounce-id anounce-id
+                             :anounce-title (get-in anounce-details [anounce-id "title"])
+                             :anounce-author-id (:anounce-author-id chat)
+                             :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
+                             :id (:id chat)
+                             :created (:created chat)
+                             :author-id (:author-id chat)
+                             :first-message (subs first-message 0 (min (count first-message) 20))
+                             :author-name (get-in user-details [(:author-id chat) "firstName"])
+                             }))
+                        chats)
+                :total-count total-count
+                }
+               }
               )
-             {:body []}
-            )
-        )
-        )
+        ))
       {:status 401}
     )
   ))

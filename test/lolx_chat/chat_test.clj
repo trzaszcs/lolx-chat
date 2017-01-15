@@ -33,7 +33,7 @@
          (store/get-by-anounce-id anounce-id [user-id opponent]) => {:id chat-id :messages [1 2 3]})))
 
 
-(fact "should return user anounces"
+(fact "should return user chats"
       (let [user-id "234"
             token "JWT"
             chat-author-id "1"
@@ -46,18 +46,21 @@
             anounce-title "some title"]
         (chat/user-chats {:headers {"authorization" (str "Bearer " token)}})
         => {:body
-            [{
-              :anounce-id anounce-id
-              :anounce-title anounce-title
-              :anounce-author-id anounce-author-id
-              :anounce-author-name anounce-author-name
-              :chats [{:id (:id chat)
-                       :author-id chat-author-id
-                       :author-name chat-author-name
-                       :first-message first-message
-                       :created (:created chat)
-                       }]
-              }]}
+            {
+             :chats [{
+                      :anounce-id anounce-id
+                      :anounce-title anounce-title
+                      :anounce-author-id anounce-author-id
+                      :anounce-author-name anounce-author-name
+                      :id (:id chat)
+                      :author-id chat-author-id
+                      :author-name chat-author-name
+                      :first-message first-message
+                      :created (:created chat)
+                      }]
+             :total-count 1
+             }
+            }
         (provided
          (jwt/ok? token) => true
          (jwt/subject token) => user-id

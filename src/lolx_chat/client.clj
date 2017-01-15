@@ -30,7 +30,9 @@
 
 (defn anounce-bulk-details
   [anounce-ids]
-  (let [response (client/get (str (env :backend-url) "/anounces/bulk" ) {:query-params {"id" anounce-ids}})
+  (if (empty? anounce-ids)
+    {}
+    (let [response (client/get (str (env :backend-url) "/anounces/bulk" ) {:query-params {"id" anounce-ids}})
         anounces-map (as-json (:body response))]
     (reduce
      (fn [set [key value]]
@@ -39,12 +41,16 @@
      {}
      anounces-map
      )
-    )
+    ))
   )
 
 (defn user-details
   [user-ids]
-  (let [response (client/get (str (env :auth-url) "/users/bulk")
-                             {:query-params {"userId" user-ids}})]
-    (as-json (:body response))
-    ))
+  (if (empty? user-ids)
+    {}
+    (let [response (client/get (str (env :auth-url) "/users/bulk")
+                               {:query-params {"userId" user-ids}})]
+      (as-json (:body response))
+      )
+    )
+  )
