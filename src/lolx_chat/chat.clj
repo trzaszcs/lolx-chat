@@ -161,6 +161,7 @@
                              :author-id (:author-id chat)
                              :first-message (subs first-message 0 (min (count first-message) 20))
                              :author-name (get-in user-details [(:author-id chat) "firstName"])
+                             :unread-messages (count-unread-messages chat user-id)
                              }))
                         chats)
                 :total-count total-count
