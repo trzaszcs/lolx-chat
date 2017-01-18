@@ -7,7 +7,7 @@
    [lolx-chat.client :as client]
    [ring.util.response :refer :all]
    [clojure.tools.logging :as log]
-   [clj-time.core :refer [after?]]))
+   [clj-time.core :refer [before?]]))
 
 (defn gen-id!
   []
@@ -87,7 +87,7 @@
   (let [read-time (get-in chat [:read user-id])
         opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
     (if read-time
-      (count (filter #(after? read-time (:created %)) opponent-messages))
+      (count (filter #(before? read-time (:created %)) opponent-messages))
       (count opponent-messages)
       )
     )
