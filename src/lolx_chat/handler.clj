@@ -4,7 +4,7 @@
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [compojure.handler :refer [site]]
-            [lolx-chat.chat :refer [create append details find find-status user-chats]]
+            [lolx-chat.chat :refer [create append details find find-status user-chats count-unread-messages]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -19,6 +19,7 @@
   (POST "/chat" []  create)
   (GET "/chat/status" []  find-status)
   (GET "/chat/user" []  user-chats)
+  (GET "/chat/unread" [] count-unread-messages)
   (PUT "/chat/:chat-id" []  append)
   (GET "/chat/status" [] find-status)
   (GET "/chat/:chat-id" [] details)
@@ -89,7 +90,7 @@
 
 (defn start-dev
   []
-    (run-jetty (wrap-reload app '(lolx-chat.handler)) 8084))
+  (run-jetty (wrap-reload app '(lolx-chat.handler)) 8084))
 
 (defn stop
   []

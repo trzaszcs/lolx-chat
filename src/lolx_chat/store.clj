@@ -1,6 +1,5 @@
 (ns lolx-chat.store
-  (:require [clj-time.core :refer [now]] ))
-
+  (:require [clj-time.core :refer [now before?]]))
 
 
 (defonce in-memory-db (atom []))
@@ -86,4 +85,24 @@
   (filter
    #(or (= user-id (:author-id %)) (= user-id (:recipient %))))
    @in-memory-db
-   )
+  )
+
+(defn count-unread-messages
+  [chat user-id]
+  (let [read-time (get-in chat [:read user-id])
+        opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
+    (if read-time
+      (count (filter #(before? read-time (:created %)) opponent-messages))
+      (count opponent-messages)
+      )
+    )
+  )
+
+(defn count-unread-messages!
+  [user-id]
+  (reduce
+   +
+   (map
+    #(count-unread-messages % user-id)
+    (get-by-user-id user-id)))
+  )

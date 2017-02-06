@@ -82,7 +82,7 @@
         )
       )))
 
-(defn count-unread-messages
+(defn count-unread-messages-in-chat
   [chat user-id]
   (let [read-time (get-in chat [:read user-id])
         opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
@@ -104,7 +104,7 @@
               chat (store/get-by-anounce-id anounce-id [user-id opponent])]
           (if chat
             {:body {:id (:id chat)
-                    :unread-messages (count-unread-messages chat user-id)}}
+                    :unread-messages (count-unread-messages-in-chat chat user-id)}}
             {:status 404}
             )
           )
@@ -161,13 +161,26 @@
                              :author-id (:author-id chat)
                              :first-message (subs first-message 0 (min (count first-message) 20))
                              :author-name (get-in user-details [(:author-id chat) "firstName"])
-                             :unread-messages (count-unread-messages chat user-id)
+                             :unread-messages (count-unread-messages-in-chat chat user-id)
                              }))
                         chats)
                 :total-count total-count
                 }
                }
               )
+        ))
+      {:status 401}
+    )
+    ))
+
+
+(defn count-unread-messages
+  [request]
+  (let [user-id (extract-jwt-sub request)]
+    (if user-id
+      (do
+        (let [unread-messages (store/count-unread-messages! user-id)]
+          {:body {:count unread-messages}}
         ))
       {:status 401}
     )

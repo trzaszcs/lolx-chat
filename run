@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-echo "starting CHAT"
-exec `lein uberjar`
-exec `java -jar target/lolx-chat-standalone.jar`
