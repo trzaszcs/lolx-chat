@@ -143,7 +143,7 @@
         (let [user-chats (store/get-by-user-id user-id)
               total-count (count user-chats)
               chats (drop (* page items-per-page) (take items-per-page user-chats))]
-            (let [user-details (client/user-details (distinct (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2)) [] chats)))
+          (let [user-details (client/user-details (distinct (reduce #(conj %1 (:author-id %2) (:anounce-author-id %2) (:recipient-id %2)) [] chats)))
                   anounce-details (client/anounce-bulk-details (distinct (map #(:anounce-id %) chats)))
                   grouped-chats (group-by :anounce-id chats)]
               {:body
@@ -155,12 +155,13 @@
                             {:anounce-id anounce-id
                              :anounce-title (get-in anounce-details [anounce-id "title"])
                              :anounce-author-id (:anounce-author-id chat)
-                             :anounce-author-name (get-in user-details [(:anounce-author-id chat) "firstName"])
                              :id (:id chat)
                              :created (:created chat)
                              :author-id (:author-id chat)
                              :first-message (subs first-message 0 (min (count first-message) 20))
                              :author-name (get-in user-details [(:author-id chat) "firstName"])
+                             :recipient-id (:recipient-id chat)
+                             :recipient-name (get-in user-details [(:recipient-id chat) "firstName"])
                              :unread-messages (count-unread-messages-in-chat chat user-id)
                              }))
                         chats)

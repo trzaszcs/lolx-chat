@@ -5,16 +5,16 @@
 (defonce in-memory-db (atom []))
 
 (defn add
-  [chat-id msg-id type anounce-id recipient author anounce-author msg]
+  [chat-id msg-id type anounce-id recipient-id author anounce-author msg]
   (try
-    (swap! 
+    (swap!
      in-memory-db
      #(conj
        %
        {:id chat-id
         :type type
         :anounce-id anounce-id
-        :recipient recipient
+        :recipient-id recipient-id
         :author-id author
         :anounce-author-id anounce-author
         :created (now)
@@ -49,7 +49,7 @@
                #(= chat-id (:id %))
                @in-memory-db
                ))]
-    (if (or (= author (:author-id chat)) (= author (:anounce-author-id chat)))
+    (if (or (= author (:author-id chat)) (= author (:anounce-author-id chat)) (= author (:recipient-id chat)))
       chat
       nil)))
 
@@ -58,7 +58,7 @@
   (let [in? (fn [col val] (some #(= val %) col))]
     (first
      (filter
-      #(and (= anounce-id (:anounce-id %)) (in? authors (:author-id %)) (in? authors (:recipient %)))
+      #(and (= anounce-id (:anounce-id %)) (in? authors (:author-id %)) (in? authors (:recipient-id %)))
       @in-memory-db
       ))
     )
@@ -83,7 +83,7 @@
 (defn get-by-user-id
   [user-id]
   (filter
-   #(or (= user-id (:author-id %)) (= user-id (:recipient %))))
+   #(or (= user-id (:author-id %)) (= user-id (:recipient-id %))))
    @in-memory-db
   )
 

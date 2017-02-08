@@ -2,6 +2,7 @@
   (:require 
    [clj-jwt.core  :refer :all]
    [clj-jwt.key   :refer [private-key public-key]]
+   [clj-time.coerce :refer [to-epoch]]
    [clj-time.core :refer [now plus days]]
    [clojure.java.io :as io]))
 
@@ -35,8 +36,12 @@
 (defn ok?
   [jwt-token]
   (let [jwt (str->jwt jwt-token)
-        issuer (get-in jwt [:claims :iss])]
-    (verify jwt (get-rsa-pub-key issuer))))
+        claims (get jwt :claims)
+        issuer (:iss claims)]
+    (and
+     (verify jwt (get-rsa-pub-key issuer))
+     (< (to-epoch (now)) (:exp claims))
+     )))
 
 (defn subject
   [jwt-token]
