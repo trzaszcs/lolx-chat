@@ -6,13 +6,16 @@
 
 
 (fact "should mark message as read old"
+      (reset! store/in-memory-db [])
       (let [recipient-id "recipient-id"
             author-id "author"
             chat-id (store/create! "someType" "anounce-id" recipient-id author-id "anounce-author" "msg")
             get-read-flag (fn [] (:read
                                   (first (get (store/get chat-id author-id) :messages))))]
         (get-read-flag) => false
+        (store/count-unread-messages recipient-id) => 1
         (store/mark-read-time! chat-id recipient-id)
+        (store/count-unread-messages recipient-id) => 0
         (get-read-flag) => true
         ))
 

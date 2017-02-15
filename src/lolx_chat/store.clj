@@ -109,13 +109,11 @@
 
 (defn count-unread-messages
   ([chat user-id]
-   (let [read-time (get-in chat [:read user-id])
-         opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
-     (if read-time
-       (count (filter #(before? read-time (:created %)) opponent-messages))
-       (count opponent-messages)
-       )
-     ))
+   (count
+    (filter
+     #(and (not (:read %))(not (= user-id (:author-id %))))
+     (:messages chat)))
+   )
   ([user-id]
    (reduce
     +
@@ -138,7 +136,7 @@
                                (map
                                 (fn [message]
                                   (if (and
-                                       (:read message)
+                                       (not (:read message))
                                        (not (:notified message))
                                        (or
                                         (nil? (:lock-time message))
@@ -153,7 +151,6 @@
                           )
                           chats)))
         ]
-    (print "---?" altered-chats)
     (filter
      (fn [chat]
        (some
