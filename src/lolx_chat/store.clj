@@ -4,9 +4,18 @@
 
 (defonce in-memory-db (atom []))
 
-(defn add
-  [chat-id msg-id type anounce-id recipient-id author anounce-author msg]
-  (try
+
+(defn- gen-id!
+  []
+  (str (java.util.UUID/randomUUID)))
+
+(defn- message
+  [msg-id author msg]
+  {:id msg-id :msg msg :author-id author :created (now) :read false})
+
+(defn create!
+  [type anounce-id recipient-id author anounce-author msg]
+  (let [chat-id (gen-id!)]
     (swap!
      in-memory-db
      #(conj
@@ -18,32 +27,32 @@
         :author-id author
         :anounce-author-id anounce-author
         :created (now)
-        :messages [{:id msg-id :msg msg :author-id author :created (now)}]}
-      ))
-    true
-    (catch IllegalStateException e false)))
+        :messages [(message (gen-id!) author msg)]}
+       ))
+    chat-id
+    )
+  )
 
-
-(defn append
-  [chat-id msg-id author msg]
-  (try
-    (swap! 
+(defn append!
+  [chat-id author msg]
+  (let [msg-id (gen-id!)]
+    (swap!
      in-memory-db
      (fn [chats]
        (map
         (fn [chat]
           (if (= chat-id (:id chat))
-            (assoc chat :messages (conj (:messages chat) {:id msg-id :author-id author :msg msg :created (now)}))
+            (assoc chat :messages (conj (:messages chat) (message (gen-id!) author msg)))
             chat
             )
           )
         chats
         )))
-    true
-    (catch IllegalStateException e false)))
+    msg-id))
 
 (defn get
   [chat-id author]
+
   (let [chat (first
               (filter
                #(= chat-id (:id %))
@@ -64,7 +73,7 @@
     )
   )
 
-(defn mark-read-time
+(defn mark-read-time!
   [chat-id user-id]
   (swap!
    in-memory-db
@@ -72,37 +81,109 @@
      (map
       (fn [chat]
         (if (= chat-id (:id chat))
-          (assoc-in chat [:read user-id] (now))
-          chat
+          (update
+           chat
+           :messages
+           (fn [messages]
+             (map
+              (fn [message]
+                (if (not (= (:author-id message) user-id))
+                  (assoc message :read true)
+                  message
+                  )
+                )
+              messages
+              )
+             )
+           )
+           chat
           )
         )
-      chats
-      )))
-  )
+      chats))))
 
 (defn get-by-user-id
   [user-id]
   (filter
    #(or (= user-id (:author-id %)) (= user-id (:recipient-id %))))
-   @in-memory-db
-  )
+   @in-memory-db)
 
 (defn count-unread-messages
-  [chat user-id]
-  (let [read-time (get-in chat [:read user-id])
-        opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
-    (if read-time
-      (count (filter #(before? read-time (:created %)) opponent-messages))
-      (count opponent-messages)
-      )
-    )
+  ([chat user-id]
+   (let [read-time (get-in chat [:read user-id])
+         opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
+     (if read-time
+       (count (filter #(before? read-time (:created %)) opponent-messages))
+       (count opponent-messages)
+       )
+     ))
+  ([user-id]
+   (reduce
+    +
+    (map
+     #(count-unread-messages % user-id)
+     (get-by-user-id user-id))))
   )
 
-(defn count-unread-messages!
-  [user-id]
-  (reduce
-   +
-   (map
-    #(count-unread-messages % user-id)
-    (get-by-user-id user-id)))
-  )
+(defn find-and-lock-unread-and-not-notified!
+  [lock-time]
+  (let [altered-chats (swap!
+                       in-memory-db
+                       (fn [chats]
+                         (map
+                          (fn [chat]
+                            (update
+                             chat
+                             :messages
+                             (fn [messages]
+                               (map
+                                (fn [message]
+                                  (if (and
+                                       (:read message)
+                                       (not (:notified message))
+                                       (or
+                                        (nil? (:lock-time message))
+                                        (before? (:lock-time message) (now))))
+                                    (assoc message :lock-time lock-time)
+                                    message
+                                    )
+                                  )
+                                messages
+                              ))
+                             )
+                          )
+                          chats)))
+        ]
+    (print "---?" altered-chats)
+    (filter
+     (fn [chat]
+       (some
+        (fn [message]
+          (= lock-time (:lock-time message))
+          )
+        (:messages chat))
+       )
+     altered-chats)))
+
+(defn reset-lock-time!
+  [lock-time]
+  (swap!
+   in-memory-db
+   (fn [chats]
+     (map
+      (fn [chat]
+        (update
+           chat
+           :messages
+           (fn [messages]
+             (map
+              (fn [message]
+                (if (= (:lock-time message) lock-time)
+                  (dissoc (assoc message :notified true) :lock-time)
+                  message
+                  )
+                )
+              messages
+              ))
+           )
+        )
+      chats))))

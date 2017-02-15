@@ -1,5 +1,5 @@
 (ns lolx-chat.chat
-  (:require 
+  (:require
    [compojure.core :refer :all]
    [lolx-chat.store :as store]
    [lolx-chat.jwt :as jwt]
@@ -9,9 +9,6 @@
    [clojure.tools.logging :as log]
    [clj-time.core :refer [before?]]))
 
-(defn gen-id!
-  []
-  (str (java.util.UUID/randomUUID)))
 
 (defn- extract-jwt-sub
   [request]
@@ -28,13 +25,11 @@
     (if (jwt/ok? token)
       (do
         (let [{type :type msg :msg anounce-id :anounceId opponent :opponent} (:body request)
-              user-id (jwt/subject token)
-              gen-id (gen-id!)]
+              user-id (jwt/subject token)]
           (if anounce-id
             (if-let [anounce-details (client/anounce-details anounce-id)]
               (do
-                (store/add gen-id (gen-id!) type anounce-id opponent user-id  (:author-id anounce-details) msg)
-                {:body {:id gen-id}}
+                {:body {:id (store/create! type anounce-id opponent user-id  (:author-id anounce-details) msg)}}
                 )
               {:status 400}
               )
@@ -82,17 +77,6 @@
         )
       )))
 
-(defn count-unread-messages-in-chat
-  [chat user-id]
-  (let [read-time (get-in chat [:read user-id])
-        opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
-    (if read-time
-      (count (filter #(before? read-time (:created %)) opponent-messages))
-      (count opponent-messages)
-      )
-    )
-  )
-
 (defn find-status
   [request]
   (let [user-id (extract-jwt-sub request)]
@@ -104,7 +88,7 @@
               chat (store/get-by-anounce-id anounce-id [user-id opponent])]
           (if chat
             {:body {:id (:id chat)
-                    :unread-messages (count-unread-messages-in-chat chat user-id)}}
+                    :unread-messages (store/count-unread-messages chat user-id)}}
             {:status 404}
             )
           )
@@ -121,10 +105,8 @@
     (if (jwt/ok? token)
       (let [user-id (jwt/subject token)]
         (if-let [chat (store/get chat-id user-id)]
-          (let [{msg :msg} (:body request)
-                msg-id (gen-id!)]
-            (store/append chat-id msg-id user-id msg)
-            {:body {:id msg-id}}
+          (let [{msg :msg} (:body request)]
+            {:body {:id (store/append! chat-id user-id msg)}}
             )
           )
         )
@@ -162,7 +144,7 @@
                              :author-name (get-in user-details [(:author-id chat) "firstName"])
                              :recipient-id (:recipient-id chat)
                              :recipient-name (get-in user-details [(:recipient-id chat) "firstName"])
-                             :unread-messages (count-unread-messages-in-chat chat user-id)
+                             :unread-messages (store/count-unread-messages chat user-id)
                              }))
                         chats)
                 :total-count total-count
@@ -180,7 +162,7 @@
   (let [user-id (extract-jwt-sub request)]
     (if user-id
       (do
-        (let [unread-messages (store/count-unread-messages! user-id)]
+        (let [unread-messages (store/count-unread-messages user-id)]
           {:body {:count unread-messages}}
         ))
       {:status 401}

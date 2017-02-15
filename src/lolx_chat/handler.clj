@@ -12,7 +12,8 @@
             [environ.core :refer [env]]
             [camel-snake-kebab.core :refer :all]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [clj-time.format :as format]))
+            [clj-time.format :as format]
+            [lolx-chat.scheduler :as scheduler]))
 
 (defroutes app-routes
   (GET "/" [] "Lolx Chat")
@@ -90,12 +91,15 @@
 
 (defn start-dev
   []
+  (scheduler/start (env :period))
   (run-jetty (wrap-reload app '(lolx-chat.handler)) 8084))
 
 (defn stop
   []
+  (scheduler/stop)
   (.stop @server))
 
 (defn -main [& [port]]
+  (scheduler/start (env :period))
   (let [port (Integer. (or port (env :port) 5000))]
    (run-jetty app port)))

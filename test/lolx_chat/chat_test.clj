@@ -42,21 +42,24 @@
             anounce-author-name "NAME2"
             anounce-id "ann-id"
             first-message "msg"
-            chat {:id "chatId" :author-id chat-author-id :recipient anounce-author-id :anounce-author-id anounce-author-id :anounce-id anounce-id :created (now) :messages [{:msg first-message}]}
-            anounce-title "some title"]
+            chat {:id "chatId" :author-id chat-author-id :recipient-id anounce-author-id :anounce-author-id anounce-author-id :anounce-id anounce-id :created (now) :messages [{:msg first-message}]}
+            anounce-title "some title"
+            unread-count 1]
         (chat/user-chats {:headers {"authorization" (str "Bearer " token)}})
         => {:body
             {
              :chats [{
                       :anounce-id anounce-id
                       :anounce-title anounce-title
-                      :anounce-author-id anounce-author-id
-                      :anounce-author-name anounce-author-name
+                      :recipient-id anounce-author-id
+                      :recipient-name anounce-author-name
                       :id (:id chat)
+                      :anounce-author-id anounce-author-id
                       :author-id chat-author-id
                       :author-name chat-author-name
                       :first-message first-message
                       :created (:created chat)
+                      :unread-messages unread-count
                       }]
              :total-count 1
              }
@@ -65,6 +68,7 @@
          (jwt/ok? token) => true
          (jwt/subject token) => user-id
          (store/get-by-user-id user-id) => [chat]
+         (store/count-unread-messages chat user-id) => unread-count
          (client/user-details [chat-author-id anounce-author-id]) => {chat-author-id {"firstName" chat-author-name} anounce-author-id {"firstName" anounce-author-name}}
          (client/anounce-bulk-details [(:anounce-id chat)]) => {(:anounce-id chat) {"title" anounce-title}}
          )))
