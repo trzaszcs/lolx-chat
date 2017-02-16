@@ -161,7 +161,7 @@
        )
      altered-chats)))
 
-(defn reset-lock-time!
+(defn reset-lock!
   [lock-time]
   (swap!
    in-memory-db
