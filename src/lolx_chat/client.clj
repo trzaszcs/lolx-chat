@@ -63,9 +63,11 @@
   [email-to context]
   (let [response (client/post (str (env :notification-url) "/notify")
                               {:headers {"Authorization" (jwt/build-auth-token email-to)
-                               :body (as-str {:context context
-                                              :type "unread-messages"
-                                              })
+                                         :body (as-str {
+                                                        :email email-to
+                                                        :context context
+                                                        :type "unread-messages"
+                                                        })
                                :content-type :json})]
     (as-json (:body response))
     ))
