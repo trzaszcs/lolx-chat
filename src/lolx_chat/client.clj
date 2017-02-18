@@ -10,6 +10,10 @@
   [str]
   (json/read-str str))
 
+(defn- as-str
+  [m]
+  (json/write-str m))
+
 (defn anounce-details
   [anounce-id]
   (let [response (client/get (str (env :backend-url) "/anounces/" anounce-id))
@@ -54,3 +58,14 @@
       )
     )
   )
+
+(defn send-unread-message-notification
+  [email-to context]
+  (let [response (client/post (str (env :notification-url) "/notify")
+                              {:headers {"Authorization" (jwt/build-auth-token email-to)
+                               :body (as-str {:context context
+                                              :type "unread-messages"
+                                              })
+                               :content-type :json})]
+    (as-json (:body response))
+    ))

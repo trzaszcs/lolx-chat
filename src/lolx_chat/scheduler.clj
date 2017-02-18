@@ -1,7 +1,7 @@
 (ns lolx-chat.scheduler
   (:require 
    [clojure.tools.logging :as log]
-   [lolx-chat.store :as store]))
+   [lolx-chat.notify :as n]))
 
 
 (def continue (atom nil))
@@ -11,7 +11,8 @@
   [sleep-time]
   (while @continue
     (do
-      (log/info "scheduler started")
+      (log/info "scheduler loop")
+      (n/notify)
       (Thread/sleep sleep-time)
       )
     ))
