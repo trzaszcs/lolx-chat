@@ -12,7 +12,9 @@
   (while @continue
     (do
       (log/info "scheduler loop")
-      (n/notify)
+      (try
+        (n/notify)
+        (catch Exception e (log/warn "exception thrown from notify" e)))
       (Thread/sleep sleep-time)
       )
     ))

@@ -37,7 +37,7 @@
   (if (empty? anounce-ids)
     {}
     (let [response (client/get (str (env :backend-url) "/anounces/bulk" ) {:query-params {"id" anounce-ids}})
-        anounces-map (as-json (:body response))]
+          anounces-map (as-json (:body response))]
     (reduce
      (fn [set [key value]]
        (assoc set (str key) value)
@@ -53,7 +53,8 @@
   (if (empty? user-ids)
     {}
     (let [response (client/get (str (env :auth-url) "/users/bulk")
-                               {:query-params {"userId" user-ids}})]
+                               {:headers {"Authorization" (jwt/build-auth-token (reduce str user-ids))}
+                                :query-params {"userId" (vec user-ids)}})]
       (as-json (:body response))
       )
     )
@@ -61,13 +62,11 @@
 
 (defn send-unread-message-notification
   [email-to context]
-  (let [response (client/post (str (env :notification-url) "/notify")
-                              {:headers {"Authorization" (jwt/build-auth-token email-to)
-                                         :body (as-str {
-                                                        :email email-to
-                                                        :context context
-                                                        :type "unread-messages"
-                                                        })
-                               :content-type :json})]
-    (as-json (:body response))
-    ))
+  {:pre [email-to]}
+  (client/post (str (env :notification-url) "/notify")
+               {:headers {"Authorization" (jwt/build-auth-token email-to)}
+                :body (as-str {:email email-to
+                                     :context context
+                                     :type "unread-messages"})
+                :content-type :json})
+)

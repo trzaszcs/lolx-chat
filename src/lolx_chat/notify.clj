@@ -10,7 +10,7 @@
 (defn- group-unread-messages
   [chat]
   (group-by
-   :user-id
+   :author-id
    (filter
     (fn [message]
       (and (not (:read message)) (not (:notified message)))
@@ -24,9 +24,9 @@
    {}
    (map
     (fn [[author-id messages]]
-      {(if (= author-id (:author chat))
-         (:opponent chat)
-         (:author chat)
+      {(if (= author-id (:author-id chat))
+         (:recipient-id chat)
+         (:author-id chat)
          ) (count messages)}
       )
     (group-unread-messages chat))
@@ -39,7 +39,7 @@
         user-details (client/user-details (keys unread-stats))]
     (doseq [[user-id messages-count] unread-stats]
         (client/send-unread-message-notification
-         (get-in user-details [user-id :email])
+         (get-in user-details [user-id "email"])
          {:url (str (env :front-url) "/chat!#id=" (:id chat))
           :author (get-in user-details [user-id "nick"])
           :anounce-title (:title anounce)

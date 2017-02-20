@@ -6,10 +6,20 @@
    [clj-time.core :refer [now]]))
 
 
-(fact "should extract unread stats"
-      (let [chat {:author "1" :opponent "2" :messages [{:user-id "1" :read true}
-                                                       {:user-id "1" :read false :notified true}
-                                                       {:user-id "2" :read false}]
-                  }]
-        (notify/extract-unread-stats chat) => {"1" 1}
-        ))
+(fact "should extract status for unread message"
+      (let [recipient-id "recipientId"
+            author-id "authorId"
+            chat-id (store/create! "type" "anounce-id" recipient-id author-id "anounce-author" "msg")
+            chat (store/get chat-id author-id)]
+        (notify/extract-unread-stats chat) => {recipient-id 1}
+        )
+      )
+
+(fact "should extract empty status for read message"
+      (let [recipient-id "recipientId"
+            author-id "authorId"
+            chat-id (store/create! "type" "anounce-id" recipient-id author-id "anounce-author" "msg")]
+        (store/mark-read-time! chat-id recipient-id)
+        (notify/extract-unread-stats (store/get chat-id author-id)) => {}
+        )
+      )

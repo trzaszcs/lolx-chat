@@ -29,7 +29,7 @@
     to-str)))
 
 (defn get-rsa-pub-key
-  [issuer] 
+  [issuer]
   (public-key (io/resource (str "rsa/" issuer ".pub"))))
 
 
