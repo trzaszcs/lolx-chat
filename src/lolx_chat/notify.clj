@@ -38,12 +38,16 @@
         anounce (client/anounce-details (:anounce-id chat))
         user-details (client/user-details (keys unread-stats))]
     (doseq [[user-id messages-count] unread-stats]
+      (let [email (get-in user-details [user-id "email"])]
+        (log/info "sending email to " email)
         (client/send-unread-message-notification
-         (get-in user-details [user-id "email"])
-         {:url (str (env :front-url) "/chat!#id=" (:id chat))
+         email
+         {:url (str (env :front-url) "/#!/chat?chatId=" (:id chat))
           :author (get-in user-details [user-id "nick"])
-          :anounce-title (:title anounce)
-         }
+          :anounceTitle (:title anounce)
+          :count messages-count
+          }
+         )
         )
       )
     ))
@@ -52,7 +56,8 @@
 (defn notify
   []
   (let [lock-time (plus (now) (minutes 5))
-        locked-chats (store/find-and-lock-unread-and-not-notified! lock-time)]
+        create-time-from (plus (now) (minutes (env :create-time-from-in-minutes)))
+        locked-chats (store/find-and-lock-unread-and-not-notified! lock-time create-time-from)]
     (when (not (empty? locked-chats))
       (log/info (count locked-chats) ":chats locked for 5 minutes")
       (doseq [chat locked-chats]

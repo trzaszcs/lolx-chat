@@ -123,7 +123,7 @@
   )
 
 (defn find-and-lock-unread-and-not-notified!
-  [lock-time]
+  [lock-time created-time-from]
   (let [altered-chats (swap!
                        in-memory-db
                        (fn [chats]
@@ -138,6 +138,7 @@
                                   (if (and
                                        (not (:read message))
                                        (not (:notified message))
+                                       (before? (:created message) created-time-from)
                                        (or
                                         (nil? (:lock-time message))
                                         (before? (:lock-time message) (now))))

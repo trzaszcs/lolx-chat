@@ -18,7 +18,8 @@
   [anounce-id]
   (let [response (client/get (str (env :backend-url) "/anounces/" anounce-id))
         anounce (as-json (:body response))]
-    {:author-id (get anounce "ownerId")}
+    {:author-id (get anounce "ownerId")
+     :title (get anounce "title")}
     )
   )
 
