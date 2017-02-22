@@ -89,9 +89,13 @@
   [app port]
     (reset! server (jetty/run-jetty (site #'app) {:port port :join? false})))
 
+(defn- start-scheduler
+  []
+  (scheduler/start (Integer/parseInt (env :period))))
+
 (defn start-dev
   []
-  (scheduler/start (env :period))
+  (start-scheduler)
   (run-jetty (wrap-reload app '(lolx-chat.handler)) 8084))
 
 (defn stop
@@ -100,6 +104,6 @@
   (.stop @server))
 
 (defn -main [& [port]]
-  (scheduler/start (env :period))
+  (start-scheduler)
   (let [port (Integer. (or port (env :port) 5000))]
    (run-jetty app port)))

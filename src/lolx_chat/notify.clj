@@ -56,7 +56,7 @@
 (defn notify
   []
   (let [lock-time (plus (now) (minutes 5))
-        create-time-from (plus (now) (minutes (env :create-time-from-in-minutes)))
+        create-time-from (plus (now) (minutes (Integer/parseInt (env :create-time-from-in-minutes))))
         locked-chats (store/find-and-lock-unread-and-not-notified! lock-time create-time-from)]
     (when (not (empty? locked-chats))
       (log/info (count locked-chats) ":chats locked for 5 minutes")

@@ -1,5 +1,5 @@
 (ns lolx-chat.scheduler
-  (:require 
+  (:require
    [clojure.tools.logging :as log]
    [lolx-chat.notify :as n]))
 
@@ -22,7 +22,8 @@
 (defn start
   [sleep-time]
   (reset! continue true)
-  (.start (Thread. (fn [] (core sleep-time)))))
+  (.start (Thread. (fn [] (core sleep-time))))
+  )
 
 (defn stop
   []
