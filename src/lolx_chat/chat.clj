@@ -133,7 +133,7 @@
                 :chats (map
                         (fn [chat]
                           (let [anounce-id (:anounce-id chat)
-                                first-message (get-in chat [:messages 0 :msg])]
+                                first-message (:msg (first (:messages chat)))]
                             {:anounce-id anounce-id
                              :anounce-title (get-in anounce-details [anounce-id "title"])
                              :anounce-author-id (:anounce-author-id chat)
