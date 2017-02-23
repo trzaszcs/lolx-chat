@@ -95,15 +95,15 @@
 
 (defn start-dev
   []
-  (start-scheduler)
+  ;(start-scheduler)
   (run-jetty (wrap-reload app '(lolx-chat.handler)) 8084))
 
 (defn stop
   []
-  (scheduler/stop)
+  ;(scheduler/stop)
   (.stop @server))
 
 (defn -main [& [port]]
-  (start-scheduler)
+  ;(start-scheduler)
   (let [port (Integer. (or port (env :port) 5000))]
    (run-jetty app port)))

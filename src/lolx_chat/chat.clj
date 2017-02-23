@@ -7,7 +7,8 @@
    [lolx-chat.client :as client]
    [ring.util.response :refer :all]
    [clojure.tools.logging :as log]
-   [clj-time.core :refer [before?]]))
+   [clj-time.core :refer [before?]]
+   [lolx-chat.scheduler :as schedule]))
 
 
 (defn- extract-jwt-sub
@@ -29,6 +30,7 @@
           (if anounce-id
             (if-let [anounce-details (client/anounce-details anounce-id)]
               (do
+                (schedule/delay-notification!)
                 {:body {:id (store/create! type anounce-id opponent user-id  (:author-id anounce-details) msg)}}
                 )
               {:status 400}
@@ -106,6 +108,7 @@
       (let [user-id (jwt/subject token)]
         (if-let [chat (store/get chat-id user-id)]
           (let [{msg :msg} (:body request)]
+            (schedule/delay-notification!)
             {:body {:id (store/append! chat-id user-id msg)}}
             )
           )
