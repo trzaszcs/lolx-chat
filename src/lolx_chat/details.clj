@@ -8,19 +8,11 @@
 
 (defn first-unread-message-id
   [chat user-id]
-  (let [read-time (get-in chat [:read user-id])
-        opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
-    (if read-time
-      (:id
-       (first
-        (filter #(before? read-time (:created %)) opponent-messages)
-        ))
-      (:id
-       (first opponent-messages)
-       )
-      )
-    )
+  (let [opponent-messages (filter #(not (= (:author-id %) user-id)) (:messages chat))]
+    (:id
+     (first (filter #(not (:read %)) opponent-messages)))
   )
+ )
 
 (defn- enrich-message
   [msg user-details]
@@ -34,7 +26,7 @@
         user-details (client/user-details user-ids)]
     (assoc chat
            :first-unread-message-id (first-unread-message-id chat requestor-id)
-           :messages (map #(enrich-message % user-details) messages)
+           :messages (reverse (map #(enrich-message % user-details) messages))
      )
     )
   )
