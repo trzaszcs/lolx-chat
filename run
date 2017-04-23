@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-echo "Staring lolx-chat..."
-(echo "(start-dev)"; cat <&0) | lein repl

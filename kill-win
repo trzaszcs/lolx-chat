@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+echo "kill CHAT - 8081"
+pid=`jps -lvm | grep chat | awk 'NR==1{print $1}'`
+taskkill /pid $pid /f

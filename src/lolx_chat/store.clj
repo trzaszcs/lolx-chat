@@ -104,8 +104,8 @@
 (defn get-by-user-id
   [user-id]
   (filter
-   #(or (= user-id (:author-id %)) (= user-id (:recipient-id %))))
-   @in-memory-db)
+   #(or (= user-id (:author-id %)) (= user-id (:recipient-id %)))
+   @in-memory-db))
 
 (defn count-unread-messages
   ([chat user-id]
@@ -124,9 +124,7 @@
 
 (defn find-and-lock-unread-and-not-notified!
   [lock-time created-time-from]
-  (let [altered-chats (swap!
-                       in-memory-db
-                       (fn [chats]
+  (let [lock-old-chat-messages (fn [chats created-timem-before lock-time]
                          (map
                           (fn [chat]
                             (update
@@ -150,7 +148,8 @@
                               ))
                              )
                           )
-                          chats)))
+                          chats))
+        altered-chats (swap! in-memory-db #(lock-old-chat-messages % created-time-from lock-time))
         ]
     (filter
      (fn [chat]
